@@ -3,103 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETHER // OS</title>
+    <title>AETHER OS // Terminal</title>
     <script src="https://kit.fontawesome.com/all.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000; --card: #0a0a0a; --border: #1a1a1a; --text: #fff; --accent: #3b82f6; }
+        :root { --bg: #000; --card: #0a0a0a; --border: #1a1a1a; --text: #ededed; --accent: #3b82f6; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-
-        /* De Danteh Style Container */
-        #root { height: 100vh; display: flex; align-items: center; justify-content: center; }
         
-        .dashboard-layout { display: flex; width: 100vw; height: 100vh; background: var(--bg); }
+        /* Login Screen */
+        #auth-gate { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 10% 10%, #101025 0%, #000 50%); }
+        .login-box { background: var(--card); border: 1px solid var(--border); padding: 3rem; border-radius: 16px; text-align: center; width: 400px; }
         
-        aside { 
-            width: 260px; border-right: 1px solid var(--border); padding: 2rem; 
-            display: flex; flex-direction: column; 
-        }
-
-        .nav-item { 
-            padding: 12px; color: #666; cursor: pointer; border-radius: 8px; 
-            margin-bottom: 8px; display: flex; align-items: center; gap: 12px; 
-        }
-        .nav-item.active { background: #111; color: #fff; border: 1px solid var(--border); }
-
-        main { flex-grow: 1; padding: 4rem; overflow-y: auto; }
+        /* Dashboard */
+        #main-system { display: none; height: 100vh; grid-template-columns: 260px 1fr; }
+        aside { border-right: 1px solid var(--border); padding: 2rem; display: flex; flex-direction: column; }
+        main { padding: 3rem; overflow-y: auto; }
         
-        /* Clerk Overrides voor Danteh Look */
-        .cl-card { background: var(--card) !important; border: 1px solid var(--border) !important; }
-        .cl-headerTitle { color: white !important; }
-        .cl-headerSubtitle { color: #666 !important; }
+        .card { background: var(--card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+        .btn { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn:hover { opacity: 0.8; }
+        
+        canvas { background: #000; border: 1px solid var(--border); border-radius: 8px; display: block; margin: 1rem auto; }
+        .timer { font-size: 3rem; font-weight: 700; margin: 1rem 0; color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="root"></div>
+    <div id="auth-gate">
+        <div class="login-box">
+            <h1 style="letter-spacing:-2px; margin-bottom:0.5rem">AETHER<span style="color:var(--accent)">.</span></h1>
+            <p style="color:#666; font-size:0.8rem; margin-bottom:2rem">Secure Access Required</p>
+            <div id="clerk-mount"></div>
+        </div>
+    </div>
+
+    <div id="main-system">
+        <aside>
+            <h2 style="letter-spacing:-1px; margin-bottom:3rem">AETHER OS</h2>
+            <div style="color:var(--accent); font-weight:600; margin-bottom:1rem"><i class="fas fa-terminal"></i> Terminal_Active</div>
+            <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
+                <div id="user-btn"></div>
+                <button onclick="Clerk.signOut()" style="background:none; border:none; color:#444; cursor:pointer"><i class="fas fa-power-off"></i></button>
+            </div>
+        </aside>
+        
+        <main>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem">
+                <div class="card">
+                    <h3><i class="fas fa-gamepad"></i> Snake_Arcade</h3>
+                    <canvas id="snake" width="300" height="300"></canvas>
+                    <button class="btn" style="width:100%" onclick="startSnake()">Boot Game</button>
+                </div>
+                
+                <div class="card" style="text-align:center">
+                    <h3><i class="fas fa-stopwatch"></i> Focus_Protocol</h3>
+                    <div class="timer" id="time">25:00</div>
+                    <div style="display:flex; gap:1rem">
+                        <button class="btn" style="flex:1" onclick="startTimer()">Start</button>
+                        <button class="btn" style="flex:1; background:#111; color:#fff" onclick="resetTimer()">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script 
         async crossorigin="anonymous" 
-        data-clerk-publishable-key="pk_live_Y2xlcmsuMW55eHgxLm5sJA" 
+        data-clerk-publishable-key="pk_test_Y29ycmVjdC1tdXNrcmF0LTU2LmNsZXJrLmFjY291bnRzLmRldiQ" 
         src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
     </script>
 
     <script>
-        const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuMW55eHgxLm5sJA";
-
+        // CLERK BOOTSTRAP
         window.addEventListener('load', async () => {
             await Clerk.load();
-
-            const rootDiv = document.getElementById('root');
-
             if (Clerk.user) {
-                // DASHBOARD RENDEREN
-                renderDashboard(rootDiv);
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('main-system').style.display = 'grid';
+                Clerk.mountUserButton(document.getElementById('user-btn'));
             } else {
-                // LOGIN RENDEREN
-                rootDiv.innerHTML = `<div id="signin-container"></div>`;
-                Clerk.mountSignIn(document.getElementById('signin-container'), {
-                    appearance: {
-                        variables: { colorPrimary: '#3b82f6', colorBackground: '#0a0a0a', colorText: '#fff' }
-                    }
+                Clerk.mountSignIn(document.getElementById('clerk-mount'), {
+                    appearance: { variables: { colorBackground: '#0a0a0a', colorText: '#fff', colorPrimary: '#3b82f6' }}
                 });
             }
         });
 
-        function renderDashboard(container) {
-            container.innerHTML = `
-                <div class="dashboard-layout">
-                    <aside>
-                        <h2 style="margin-bottom: 2rem; letter-spacing: -1px;">AETHER</h2>
-                        <nav>
-                            <div class="nav-item active"><i class="fas fa-th-large"></i> Dashboard</div>
-                            <div class="nav-item" id="game-btn"><i class="fas fa-gamepad"></i> Arcade</div>
-                        </nav>
-                        <div style="margin-top: auto; display:flex; align-items:center; justify-content:space-between">
-                            <div id="user-button"></div>
-                            <button onclick="Clerk.signOut()" style="background:none; border:none; color:#444; cursor:pointer"><i class="fas fa-power-off"></i></button>
-                        </div>
-                    </aside>
-                    <main>
-                        <h1>Dashboard</h1>
-                        <p style="color: #666; margin-top: 1rem;">Welkom, ${Clerk.user.firstName}!</p>
-                        
-                        <div style="margin-top: 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                            <div style="background: #0a0a0a; border: 1px solid #111; padding: 2rem; border-radius: 12px;">
-                                <h3>Snake Highscore</h3>
-                                <p style="font-size: 2rem; font-weight: bold; margin-top: 1rem;">1,240</p>
-                            </div>
-                            <div style="background: #0a0a0a; border: 1px solid #111; padding: 2rem; border-radius: 12px;">
-                                <h3>Focus Time</h3>
-                                <p style="font-size: 2rem; font-weight: bold; margin-top: 1rem;">42h</p>
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            `;
-            Clerk.mountUserButton(document.getElementById('user-button'));
+        // SNAKE ENGINE
+        let sInterval;
+        function startSnake() {
+            const c = document.getElementById('snake'), ctx = c.getContext('2d');
+            let s = [{x:10, y:10}], d = {x:1, y:0}, f = {x:5, y:5};
+            clearInterval(sInterval);
+            window.onkeydown = e => {
+                const k = {ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0}};
+                if(k[e.key]) d = k[e.key];
+            };
+            sInterval = setInterval(() => {
+                let h = {x: s[0].x + d.x, y: s[0].y + d.y};
+                s.unshift(h);
+                if(h.x===f.x && h.y===f.y) f = {x:Math.floor(Math.random()*15), y:Math.floor(Math.random()*15)};
+                else s.pop();
+                ctx.fillStyle='#000'; ctx.fillRect(0,0,300,300);
+                ctx.fillStyle='#3b82f6'; s.forEach(p=>ctx.fillRect(p.x*20, p.y*20, 18, 18));
+                ctx.fillStyle='#fff'; ctx.fillRect(f.x*20, f.y*20, 18, 18);
+            }, 100);
         }
+
+        // TIMER ENGINE
+        let tInterval, seconds = 1500;
+        function startTimer() {
+            if(tInterval) return;
+            tInterval = setInterval(() => {
+                seconds--;
+                let m = Math.floor(seconds/60), s = seconds%60;
+                document.getElementById('time').innerText = `${m}:${s<10?'0':''}${s}`;
+                if(seconds<=0) clearInterval(tInterval);
+            }, 1000);
+        }
+        function resetTimer() { clearInterval(tInterval); tInterval = null; seconds = 1500; document.getElementById('time').innerText = "25:00"; }
     </script>
 </body>
 </html>
