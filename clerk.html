@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether // System Fixed</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/all.js" crossorigin="anonymous"></script>
+    
+    <style>
+        :root {
+            --bg-deep: #000000;
+            --bg-card: #0a0a0a;
+            --text-main: #ededed;
+            --text-muted: #a1a1a1;
+            --accent: #3b82f6;
+            --border: #262626;
+            --sidebar-width: 240px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Loading state */
+        #system-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-deep); display: flex; align-items: center;
+            justify-content: center; z-index: 9999; flex-direction: column; gap: 1rem;
+        }
+
+        .spinner { width: 24px; height: 24px; border: 2px solid #222; border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Auth Screen */
+        #auth-screen { display: none; height: 100vh; align-items: center; justify-content: center; background: radial-gradient(circle at center, #111, #000); }
+        .key-warning { color: #ffab00; background: rgba(255,171,0,0.1); padding: 1rem; border-radius: 8px; border: 1px solid #ffab00; margin-bottom: 1rem; font-size: 0.85rem; max-width: 400px; line-height: 1.4; }
+
+        /* Dashboard Layout */
+        #app-container { display: none; }
+        .layout { display: flex; min-height: 100vh; }
+
+        aside {
+            width: var(--sidebar-width); background: var(--bg-deep);
+            border-right: 1px solid var(--border); padding: 2rem 1.25rem;
+            display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+        }
+
+        .brand { font-weight: 600; font-size: 1.1rem; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .brand i { color: var(--accent); font-size: 0.8rem; }
+
+        nav { flex-grow: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem;
+            color: var(--text-muted); border-radius: 6px; margin-bottom: 0.25rem;
+            cursor: pointer; font-size: 0.9rem; transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { background: #111; color: #fff; }
+        .nav-item.active { border: 1px solid var(--border); }
+
+        main { flex-grow: 1; padding: 3rem 4rem; max-width: 1100px; }
+        header { margin-bottom: 3rem; }
+        header h1 { font-size: 1.8rem; font-weight: 600; letter-spacing: -0.02em; }
+
+        /* Interface Elements */
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+        .input-group { display: flex; gap: 0.75rem; margin-bottom: 2rem; }
+        input { background: transparent; border: 1px solid var(--border); color: #fff; padding: 0.7rem 1rem; border-radius: 6px; flex-grow: 1; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .btn { background: #fff; color: #000; border: none; padding: 0.7rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid #1a1a1a; }
+        .icon-btn { background: transparent; border: none; color: #555; cursor: pointer; }
+        .icon-btn:hover { color: #ff4444; }
+
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 768px) { .layout { flex-direction: column; } aside { width: 100%; height: auto; position: relative; } main { padding: 2rem; } }
+    </style>
+</head>
+<body>
+
+    <div id="system-loader">
+        <div class="spinner"></div>
+        <p style="font-size: 0.8rem; color: #555; letter-spacing: 1px;">INITIALIZING SYSTEM...</p>
+    </div>
+
+    <div id="auth-screen">
+        <div style="text-align: center;">
+            <div id="key-check" class="key-warning" style="display:none;">
+                <strong>Systeem Melding:</strong> Geen geldige Clerk Key gevonden. <br>
+                Plak je <code>pk_test_...</code> sleutel in de code om te activeren.
+            </div>
+            <div id="clerk-signin"></div>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <div class="layout">
+            <aside>
+                <div class="brand"><i class="fas fa-circle"></i><span>AETHER</span></div>
+                <nav>
+                    <div class="nav-item active" onclick="router.navigate('notes', this)"><i class="far fa-file-alt"></i> Notes</div>
+                    <div class="nav-item" onclick="router.navigate('tasks', this)"><i class="far fa-check-circle"></i> Tasks</div>
+                    <div class="nav-item" onclick="router.navigate('profile', this)"><i class="far fa-user"></i> Profile</div>
+                </nav>
+                <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                    <div id="clerk-user-button"></div>
+                    <button class="icon-btn" onclick="auth.logout()"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </aside>
+
+            <main>
+                <header><h1 id="view-title">Notes</h1></header>
+
+                <section id="view-notes" class="view active">
+                    <div class="input-group">
+                        <input type="text" id="note-input" placeholder="Quick note...">
+                        <button class="btn" onclick="app.addNote()">Create</button>
+                    </div>
+                    <div id="notes-list"></div>
+                </section>
+
+                <section id="view-tasks" class="view">
+                    <div class="input-group">
+                        <input type="text" id="task-input" placeholder="Task description...">
+                        <button class="btn" onclick="app.addTask()">Add Task</button>
+                    </div>
+                    <div id="tasks-list"></div>
+                </section>
+
+                <section id="view-profile" class="view">
+                    <div class="card">
+                        <p id="profile-email" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+                        <h2 id="profile-name" style="margin-top: 0.5rem;">User Profile</h2>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script 
+        async 
+        crossorigin="anonymous" 
+        data-clerk-publishable-key="pk_live_Y2xlcmsuMW55eHgxLm5sJA" 
+        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" 
+        type="text/javascript">
+    </script>
+
+    <script>
+        const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuMW55eHgxLm5sJA"; // PLAK HIER JE KEY
+
+        const auth = {
+            init: async () => {
+                const loader = document.getElementById('system-loader');
+                
+                // Veiligheidscheck: als de sleutel nog de placeholder is
+                if (PUBLISHABLE_KEY.includes("YOUR_CLERK")) {
+                    loader.style.display = 'none';
+                    document.getElementById('auth-screen').style.display = 'flex';
+                    document.getElementById('key-check').style.display = 'block';
+                    return;
+                }
+
+                try {
+                    await Clerk.load();
+                    loader.style.display = 'none';
+
+                    if (Clerk.user) {
+                        auth.showApp();
+                        app.init();
+                    } else {
+                        auth.showLogin();
+                    }
+                } catch (err) {
+                    console.error("Clerk fail:", err);
+                    loader.innerHTML = "<p style='color:red'>System Error: Check Internet or API Key.</p>";
+                }
+            },
+            showLogin: () => {
+                document.getElementById('auth-screen').style.display = 'flex';
+                Clerk.mountSignIn(document.getElementById('clerk-signin'));
+            },
+            showApp: () => {
+                document.getElementById('app-container').style.display = 'block';
+                Clerk.mountUserButton(document.getElementById('clerk-user-button'));
+                document.getElementById('profile-name').innerText = Clerk.user.fullName;
+                document.getElementById('profile-email').innerText = Clerk.user.primaryEmailAddress.emailAddress;
+            },
+            logout: () => Clerk.signOut().then(() => location.reload())
+        };
+
+        const router = {
+            navigate: (id, el) => {
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.getElementById(`view-${id}`).classList.add('active');
+                el.classList.add('active');
+                document.getElementById('view-title').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+            }
+        };
+
+        const app = {
+            data: { notes: JSON.parse(localStorage.getItem('notes') || '[]'), tasks: JSON.parse(localStorage.getItem('tasks') || '[]') },
+            init: () => { app.render('notes'); app.render('tasks'); },
+            save: () => { localStorage.setItem('notes', JSON.stringify(app.data.notes)); localStorage.setItem('tasks', JSON.stringify(app.data.tasks)); },
+            addNote: () => {
+                const val = document.getElementById('note-input').value;
+                if(!val) return;
+                app.data.notes.unshift({id: Date.now(), text: val});
+                document.getElementById('note-input').value = '';
+                app.save(); app.render('notes');
+            },
+            addTask: () => {
+                const val = document.getElementById('task-input').value;
+                if(!val) return;
+                app.data.tasks.unshift({id: Date.now(), text: val});
+                document.getElementById('task-input').value = '';
+                app.save(); app.render('tasks');
+            },
+            delete: (type, id) => {
+                app.data[type] = app.data[type].filter(i => i.id !== id);
+                app.save(); app.render(type);
+            },
+            render: (type) => {
+                const list = document.getElementById(`${type}-list`);
+                list.innerHTML = app.data[type].map(item => `
+                    <div class="item">
+                        <span>${item.text}</span>
+                        <button class="icon-btn" onclick="app.delete('${type}', ${item.id})"><i class="far fa-trash-alt"></i></button>
+                    </div>
+                `).join('');
+            }
+        };
+
+        auth.init();
+    </script>
+</body>
+</html>
