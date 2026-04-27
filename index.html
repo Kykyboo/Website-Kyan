@@ -1,127 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETHER OS // Terminal</title>
-    <script src="https://kit.fontawesome.com/all.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #000; --card: #0a0a0a; --border: #1a1a1a; --text: #ededed; --accent: #3b82f6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
-        
-        /* Login Screen */
-        #auth-gate { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 10% 10%, #101025 0%, #000 50%); }
-        .login-box { background: var(--card); border: 1px solid var(--border); padding: 3rem; border-radius: 16px; text-align: center; width: 400px; }
-        
-        /* Dashboard */
-        #main-system { display: none; height: 100vh; grid-template-columns: 260px 1fr; }
-        aside { border-right: 1px solid var(--border); padding: 2rem; display: flex; flex-direction: column; }
-        main { padding: 3rem; overflow-y: auto; }
-        
-        .card { background: var(--card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
-        .btn { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn:hover { opacity: 0.8; }
-        
-        canvas { background: #000; border: 1px solid var(--border); border-radius: 8px; display: block; margin: 1rem auto; }
-        .timer { font-size: 3rem; font-weight: 700; margin: 1rem 0; color: var(--accent); }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vriendelijke Verklaring</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui, Arial;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .card {
+    width: 95%;
+    max-width: 520px;
+    background: rgba(17, 24, 39, 0.9);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+    border: 1px solid rgba(148,163,184,0.2);
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: 20px;
+  }
+
+  p {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+
+  .note {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    font-size: 13px;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #0b1220;
+    color: white;
+    outline: none;
+    resize: none;
+  }
+
+  canvas {
+    width: 100%;
+    height: 160px;
+    background: white;
+    border-radius: 12px;
+    margin-top: 8px;
+    touch-action: none;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  button {
+    flex: 1;
+    padding: 11px;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .clear {
+    background: #ef4444;
+    color: white;
+  }
+
+  .send {
+    background: #22c55e;
+    color: black;
+  }
+
+  #status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #38bdf8;
+    min-height: 18px;
+  }
+</style>
 </head>
+
 <body>
 
-    <div id="auth-gate">
-        <div class="login-box">
-            <h1 style="letter-spacing:-2px; margin-bottom:0.5rem">AETHER<span style="color:var(--accent)">.</span></h1>
-            <p style="color:#666; font-size:0.8rem; margin-bottom:2rem">Secure Access Required</p>
-            <div id="clerk-mount"></div>
-        </div>
-    </div>
+<div class="card">
+  <h1>Vriendelijke Verklaring</h1>
 
-    <div id="main-system">
-        <aside>
-            <h2 style="letter-spacing:-1px; margin-bottom:3rem">AETHER OS</h2>
-            <div style="color:var(--accent); font-weight:600; margin-bottom:1rem"><i class="fas fa-terminal"></i> Terminal_Active</div>
-            <div style="margin-top:auto; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center">
-                <div id="user-btn"></div>
-                <button onclick="Clerk.signOut()" style="background:none; border:none; color:#444; cursor:pointer"><i class="fas fa-power-off"></i></button>
-            </div>
-        </aside>
-        
-        <main>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem">
-                <div class="card">
-                    <h3><i class="fas fa-gamepad"></i> Snake_Arcade</h3>
-                    <canvas id="snake" width="300" height="300"></canvas>
-                    <button class="btn" style="width:100%" onclick="startSnake()">Boot Game</button>
-                </div>
-                
-                <div class="card" style="text-align:center">
-                    <h3><i class="fas fa-stopwatch"></i> Focus_Protocol</h3>
-                    <div class="timer" id="time">25:00</div>
-                    <div style="display:flex; gap:1rem">
-                        <button class="btn" style="flex:1" onclick="startTimer()">Start</button>
-                        <button class="btn" style="flex:1; background:#111; color:#fff" onclick="resetTimer()">Reset</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+  <div class="note">
+    💚 We gaan altijd lief met elkaar om.  
+    Dingen die gezegd worden zijn niet bedoeld om te kwetsen of letterlijk te nemen.
+  </div>
 
-    <script 
-        async crossorigin="anonymous" 
-        data-clerk-publishable-key="pk_test_Y29ycmVjdC1tdXNrcmF0LTU2LmNsZXJrLmFjY291bnRzLmRldiQ" 
-        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js">
-    </script>
+  <input id="name" placeholder="Naam" />
 
-    <script>
-        // CLERK BOOTSTRAP
-        window.addEventListener('load', async () => {
-            await Clerk.load();
-            if (Clerk.user) {
-                document.getElementById('auth-gate').style.display = 'none';
-                document.getElementById('main-system').style.display = 'grid';
-                Clerk.mountUserButton(document.getElementById('user-btn'));
-            } else {
-                Clerk.mountSignIn(document.getElementById('clerk-mount'), {
-                    appearance: { variables: { colorBackground: '#0a0a0a', colorText: '#fff', colorPrimary: '#3b82f6' }}
-                });
-            }
-        });
+  <textarea id="wish" placeholder="Wat wil je heel graag doen?"></textarea>
 
-        // SNAKE ENGINE
-        let sInterval;
-        function startSnake() {
-            const c = document.getElementById('snake'), ctx = c.getContext('2d');
-            let s = [{x:10, y:10}], d = {x:1, y:0}, f = {x:5, y:5};
-            clearInterval(sInterval);
-            window.onkeydown = e => {
-                const k = {ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0}};
-                if(k[e.key]) d = k[e.key];
-            };
-            sInterval = setInterval(() => {
-                let h = {x: s[0].x + d.x, y: s[0].y + d.y};
-                s.unshift(h);
-                if(h.x===f.x && h.y===f.y) f = {x:Math.floor(Math.random()*15), y:Math.floor(Math.random()*15)};
-                else s.pop();
-                ctx.fillStyle='#000'; ctx.fillRect(0,0,300,300);
-                ctx.fillStyle='#3b82f6'; s.forEach(p=>ctx.fillRect(p.x*20, p.y*20, 18, 18));
-                ctx.fillStyle='#fff'; ctx.fillRect(f.x*20, f.y*20, 18, 18);
-            }, 100);
-        }
+  <textarea id="dislike" placeholder="Zijn er dingen die je niet leuk vindt die gezegd worden?"></textarea>
 
-        // TIMER ENGINE
-        let tInterval, seconds = 1500;
-        function startTimer() {
-            if(tInterval) return;
-            tInterval = setInterval(() => {
-                seconds--;
-                let m = Math.floor(seconds/60), s = seconds%60;
-                document.getElementById('time').innerText = `${m}:${s<10?'0':''}${s}`;
-                if(seconds<=0) clearInterval(tInterval);
-            }, 1000);
-        }
-        function resetTimer() { clearInterval(tInterval); tInterval = null; seconds = 1500; document.getElementById('time').innerText = "25:00"; }
-    </script>
+  <p style="margin-bottom:6px;">Handtekening:</p>
+  <canvas id="canvas"></canvas>
+
+  <div class="buttons">
+    <button class="clear" onclick="clearCanvas()">Wissen</button>
+    <button class="send" onclick="send()">Verzenden</button>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const WEBHOOK_URL = "https://YOUR-WEBHOOK-URL-HERE";
+/* =================== */
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let drawing = false;
+
+function pos(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.touches ? e.touches[0].clientX : e.clientX) - r.left,
+    y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top
+  };
+}
+
+function start(e) {
+  drawing = true;
+  const p = pos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const p = pos(e);
+
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#000";
+
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+}
+
+function end() {
+  drawing = false;
+}
+
+canvas.addEventListener("mousedown", start);
+canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mouseup", end);
+canvas.addEventListener("mouseout", end);
+
+canvas.addEventListener("touchstart", start);
+canvas.addEventListener("touchmove", draw);
+canvas.addEventListener("touchend", end);
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function send() {
+  const status = document.getElementById("status");
+
+  const data = {
+    name: document.getElementById("name").value,
+    wish: document.getElementById("wish").value,
+    dislikes: document.getElementById("dislike").value,
+    signature: canvas.toDataURL("image/png"),
+    timestamp: new Date().toISOString(),
+    note: "Alle uitspraken zijn bedoeld in een vriendelijke context en niet letterlijk of negatief bedoeld."
+  };
+
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      status.innerText = "✔ Verstuurd!";
+    } else {
+      status.innerText = "❌ Er ging iets mis.";
+    }
+  } catch (e) {
+    status.innerText = "❌ Webhook fout.";
+  }
+}
+</script>
+
 </body>
 </html>
